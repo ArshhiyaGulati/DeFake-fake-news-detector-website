@@ -1,6 +1,4 @@
 flask
-transformers==4.35.0
-
 requests
 regex
 gunicorn
