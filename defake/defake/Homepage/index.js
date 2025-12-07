@@ -13,21 +13,25 @@ const app = express();
 const saltRounds = 10;
 
 // PostgreSQL connection configuration
-const db = new pg.Client({
-  user: "postgres",
-  host: "localhost",
-  database: "secrets",
-  password: "AYAANARSHHIYA1024",
-  port: 5432,
-});
+// PostgreSQL connection configuration (Render + Local)
+let db;
 
 try {
+  db = new pg.Client({
+    connectionString: process.env.DATABASE_URL || "postgres://postgres:AYAANARSHHIYA1024@localhost:5432/secrets",
+    ssl: process.env.DATABASE_URL
+      ? { rejectUnauthorized: false }   // Render
+      : false                           // Local (no SSL)
+  });
+
   await db.connect();
-  console.log("✅ Database connected successfully!");
+  console.log("✅ Database connected:", process.env.DATABASE_URL ? "Render" : "Local");
+
 } catch (err) {
   console.error("❌ Database connection error:", err.message);
   process.exit(1);
 }
+
 
 // Set up EJS as the view engine
 app.set('view engine', 'ejs');
