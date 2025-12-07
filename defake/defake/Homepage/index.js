@@ -175,26 +175,26 @@ app.post('/check-news', (req, res) => {
 });
 
 // ------------------ FLASK FACTCHECK ROUTE ------------------
+const flaskUrl =
+  process.env.NODE_ENV === "production"
+    ? "https://defake-fake-news-detector-website.onrender.com/api/analyze"
+    : "http://localhost:5000/api/analyze";
+
 app.post("/factcheck", async (req, res) => {
   const text = req.body.text || req.body.newsInput;
   console.log("📩 Incoming /factcheck request:", text);
 
   if (!text) {
-    console.warn("⚠️ Empty text received from frontend");
     return res.status(400).json({ error: "No text provided" });
   }
 
   try {
-    const flaskUrl = "http://localhost:5000/api/analyze";
     console.log("🔁 Forwarding to Flask:", flaskUrl);
 
     const flaskResponse = await axios.post(flaskUrl, { text });
-    console.log("✅ Flask responded:", flaskResponse.data);
-
     res.json(flaskResponse.data);
   } catch (err) {
     console.error("❌ Flask connection error:", err.message);
-    if (err.response) console.error("Flask error details:", err.response.data);
 
     res.status(500).json({
       error: "Flask service unavailable or failed",
@@ -202,6 +202,7 @@ app.post("/factcheck", async (req, res) => {
     });
   }
 });
+
 
 // ------------------ START SERVER ------------------
 const PORT = process.env.PORT || 3000;
