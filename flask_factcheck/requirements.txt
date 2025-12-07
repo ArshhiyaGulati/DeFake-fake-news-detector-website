@@ -1,0 +1,10 @@
+flask
+transformers==4.35.0
+torch==2.1.0
+numpy<2
+requests
+regex
+gunicorn
+textblob
+python-dotenv
+flask-cors

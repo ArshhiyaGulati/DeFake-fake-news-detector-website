@@ -1,0 +1,14 @@
+<%- include('../partials/header', { title: 'Success', isAuthenticated: true }) %>
+
+<div class="auth-container">
+    <h1>Success!</h1>
+    <div class="success-message">
+        <p><%= message %></p>
+        <% if (user) { %>
+            <p>Welcome, <%= user.username %>!</p>
+        <% } %>
+    </div>
+    <a href="/" class="auth-button">Go to Homepage</a>
+</div>
+
+<%- include('../partials/footer') %> 

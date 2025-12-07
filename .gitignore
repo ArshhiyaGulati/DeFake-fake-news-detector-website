@@ -1,0 +1,22 @@
+# Node
+node_modules/
+defake/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Python
+flask_factcheck/venv/
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+
+# Env / secrets
+.env
+
+# IDE / system
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

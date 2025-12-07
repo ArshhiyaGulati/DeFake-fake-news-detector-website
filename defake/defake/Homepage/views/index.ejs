@@ -1,0 +1,109 @@
+<%- include('partials/header', { title: 'Home', isAuthenticated: isAuthenticated }) %>
+
+<section class="hero" id="home">
+  <h1>Expose the Fake. Trust the Real.</h1>
+</section>
+
+<section class="main-verification">
+  <h2 class="verify-text">Paste a news article or URL to check its authenticity</h2>
+
+  <div class="search-box">
+
+    <!-- NEWS INPUT -->
+    <input 
+      type="text" 
+      id="newsInput" 
+      placeholder="Paste a news article or URL to check its authenticity"
+    />
+
+    <!-- CHECK BUTTON -->
+    <button id="checkButton">Check</button>
+
+    <!-- CLEAR BUTTON -->
+    <button id="clearButton" class="clear-btn">Clear</button>
+
+    <!-- LOADER -->
+    <div id="loader" class="loader" style="display:none;"></div>
+
+    <!-- VERDICT MESSAGE -->
+    <p id="verdictMessage"></p>
+
+    <!-- CREDIBILITY SCORE UI -->
+    <div id="credibilityScore" class="credibility-score"></div>
+  </div>
+</section>
+
+<!-- ============================
+     FEATURES SECTION
+=============================== -->
+<section class="highlights" id="features">
+  <h2>What Sets Us Apart</h2>
+
+  <div class="cards">
+    <% const features = [
+      { icon: "✅", title: "Trusted Sources", description: "We rely on reputable fact-checking organizations and verified datasets." },
+      { icon: "⏱️", title: "Real-Time Updates", description: "Constant monitoring ensures you get the latest fact-checks instantly." },
+      { icon: "📊", title: "Credibility Score", description: "Each result includes a breakdown of factors impacting authenticity." },
+      { icon: "🔔", title: "Personalized Alerts", description: "Optional notifications for trending misinformation." },
+      { icon: "🗣️", title: "User Feedback", description: "Help improve accuracy by flagging incorrect results." }
+    ]; %>
+
+    <% features.forEach(feature => { %>
+      <div class="card">
+        <h3><%= feature.icon %> <%= feature.title %></h3>
+        <p><%= feature.description %></p>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<!-- ============================
+     RECENT FLAGGED NEWS
+=============================== -->
+<section class="verdicts">
+  <h2>Recently Flagged News</h2>
+
+  <div class="verdict-tags">
+    <button>Trending</button>
+    <button>Fake News</button>
+    <button>View All</button>
+  </div>
+
+  <div class="verdict-cards">
+    <% const flaggedNews = [
+      { 
+        image: "https://images.unsplash.com/photo-1514065549995-7706f6017a27?w=400",
+        title: "Claim: Aliens spotted in London",
+        verdict: "FAKE",
+        explanation: "The viral image was digitally manipulated and debunked by experts."
+      },
+      { 
+        image: "https://images.unsplash.com/photo-1623682687938-515344908afe?w=400",
+        title: "Claim: COVID-19 vaccine alters DNA",
+        verdict: "FAKE",
+        explanation: "Scientific consensus confirms mRNA vaccines do not alter DNA."
+      },
+      { 
+        image: "https://images.unsplash.com/photo-1567965178128-abb8d8532ae7?w=400",
+        title: "Claim: US Election was rigged",
+        verdict: "FAKE",
+        explanation: "Multiple investigations found no widespread election fraud."
+      }
+    ]; %>
+
+    <% flaggedNews.forEach(news => { %>
+      <div class="verdict-card">
+        <img src="<%= news.image %>" alt="<%= news.title %>">
+        <div class="card-body">
+          <h3><%= news.title %></h3>
+          <p>
+            <strong style="color:#DC2626;"><%= news.verdict %></strong> — 
+            <%= news.explanation %>
+          </p>
+        </div>
+      </div>
+    <% }) %>
+  </div>
+</section>
+
+<%- include('partials/footer') %>

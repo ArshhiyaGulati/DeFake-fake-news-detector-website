@@ -1,0 +1,29 @@
+<%- include('../partials/header', { title: 'Register', isAuthenticated: false }) %>
+
+<div class="auth-container">
+    <h1>Create Account</h1>
+    <% if (error) { %>
+        <div class="error-message"><%= error %></div>
+    <% } %>
+    <form class="auth-form" action="/login/register" method="POST">
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+        </div>
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" required>
+        </div>
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+        </div>
+        <button type="submit" class="auth-button">Register</button>
+    </form>
+    <p class="auth-link">
+        Already have an account? <a href="/login/signin">Login here</a>
+    </p>
+    <a href="/login" class="back-link">Back</a>
+</div>
+
+<%- include('../partials/footer') %>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DeFake - AI News Authenticity Checker</title>
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #f3f4f6;
+      margin: 0;
+      text-align: center;
+    }
+    header {
+      background: linear-gradient(90deg, #1e40af, #3b82f6);
+      color: white;
+      padding: 2rem 0;
+      font-size: 1.8rem;
+      font-weight: 600;
+    }
+    main {
+      padding: 40px 20px;
+    }
+    .input-box {
+      margin: 0 auto;
+      max-width: 700px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    input {
+      width: 100%;
+      padding: 15px;
+      font-size: 1.1rem;
+      border: 2px solid #ccc;
+      border-radius: 12px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px 40px;
+      border-radius: 10px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      box-shadow: 0 3px 8px rgba(37, 99, 235, 0.3);
+    }
+    button:hover {
+      background-color: #1e3a8a;
+    }
+    .result-box {
+      margin-top: 40px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+      background-color: white;
+      border-radius: 12px;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px 30px;
+      text-align: left;
+    }
+    .real { border-left: 8px solid #16a34a; }
+    .fake { border-left: 8px solid #dc2626; }
+    .result-title {
+      font-weight: bold;
+      font-size: 1.4rem;
+    }
+    .confidence-bar {
+      margin-top: 15px;
+      height: 20px;
+      border-radius: 10px;
+      background-color: #e5e7eb;
+      overflow: hidden;
+    }
+    .bar {
+      height: 100%;
+      transition: width 0.6s ease;
+    }
+    .bar.real { background-color: #16a34a; }
+    .bar.fake { background-color: #dc2626; }
+    .analysis {
+      margin-top: 15px;
+      font-size: 1rem;
+      color: #4b5563;
+    }
+  </style>
+</head>
+<body>
+  <header>🧠 DeFake - News Authenticity Analyzer</header>
+
+  <main>
+    <h2>Paste a news article or URL to check its authenticity</h2>
+    <div class="input-box">
+      <input type="text" id="newsInput" placeholder="Enter your news headline..." />
+      <button onclick="checkNews()">Check</button>
+    </div>
+
+    <div id="result" class="result-box" style="display:none;"></div>
+  </main>
+
+  <script>
+    async function checkNews() {
+      const query = document.getElementById('newsInput').value.trim();
+      const resultDiv = document.getElementById('result');
+      if (!query) {
+        resultDiv.innerHTML = "⚠️ Please enter some text to check.";
+        resultDiv.style.display = 'block';
+        return;
+      }
+
+      resultDiv.innerHTML = "⏳ Checking...";
+      resultDiv.style.display = 'block';
+
+     const res = await fetch('http://localhost:5000/api/analyze', {
+
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({ text: query })
+      });
+
+      const data = await res.json();
+
+      if (data.status === "ok") {
+        const isReal = data.real_probability > data.fake_probability;
+        const colorClass = isReal ? "real" : "fake";
+        const verdict = isReal ? "✅ This news appears to be REAL." : "⚠️ This news appears to be FAKE.";
+
+        resultDiv.className = `result-box ${colorClass}`;
+        resultDiv.innerHTML = `
+          <div class="result-title">${verdict}</div>
+          <div class="confidence-bar">
+            <div class="bar ${colorClass}" style="width:${isReal ? data.real_probability : data.fake_probability}%;"></div>
+          </div>
+          <div class="analysis">
+            <p><b>Confidence Score:</b> ${isReal ? data.real_probability.toFixed(2) : data.fake_probability.toFixed(2)}%</p>
+            <p><b>Analysis:</b> ${data.analysis}</p>
+          </div>
+        `;
+      } else {
+        resultDiv.className = "result-box fake";
+        resultDiv.innerHTML = `<p>❌ ${data.error || "Could not process the request."}</p>`;
+      }
+    }
+  </script>
+</body>
+</html>

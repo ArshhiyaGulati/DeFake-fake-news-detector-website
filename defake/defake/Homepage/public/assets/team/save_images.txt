@@ -1,0 +1,8 @@
+Please save the provided images in this folder with the following names:
+
+1. ekamjot.jpg - The image with the person wearing a maroon turban and glasses
+2. mayank.jpg - The passport-style photo with grey background
+3. arshhiya.jpg - The circular photo with plants in the background
+4. gunjan.jpg - The selfie with white eyelet dress
+
+The images should be saved in this directory (Homepage/public/assets/team/) 
