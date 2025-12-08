@@ -909,3 +909,18 @@ body {
         font-size: 0.7rem;
     }
   }
+/* Mobile fix for score circle alignment */
+@media (max-width: 768px) {
+  .score-display {
+    flex-direction: column;      /* Stack circle above text */
+    align-items: center;        /* Center everything */
+    text-align: center;         /* Center text */
+  }
+
+  .score-circle {
+    width: 70px;                /* Slightly smaller circle for mobile */
+    height: 70px;
+    font-size: 1.3rem;
+    margin-bottom: 1rem;        /* Space below the circle */
+  }
+}
