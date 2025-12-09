@@ -195,34 +195,41 @@ async function callFlaskWithRetries(url, payload, retries = 6, delay = 1500) {
 }
 
 // --- FLASK URL (PROD OR LOCAL) ---
+// Correct Flask URL for Render deployment
 const flaskUrl =
   process.env.NODE_ENV === "production"
     ? "https://defake-fake-news-detector-website.onrender.com/api/analyze"
     : "http://localhost:5000/api/analyze";
 
-// --- MAIN ROUTE ---
+// Retry wrapper (wait for Flask to wake)
+async function callFlaskWithRetry(text, retries = 8) {
+  for (let i = 0; i < retries; i++) {
+    try {
+      console.log(`🔁 Attempt ${i + 1} → calling Flask...`);
+      const response = await axios.post(flaskUrl, { text });
+      return response.data;
+    } catch (err) {
+      console.log("❌ Flask not awake yet:", err.message);
+      await new Promise((res) => setTimeout(res, 2000)); // wait 2 sec
+    }
+  }
+  throw new Error("Flask did not wake up in time");
+}
+
 app.post("/factcheck", async (req, res) => {
   const text = req.body.text || req.body.newsInput;
-  console.log("📩 Incoming /factcheck request:", text);
 
   if (!text) {
     return res.status(400).json({ error: "No text provided" });
   }
 
   try {
-    console.log("🔁 Forwarding request to Flask:", flaskUrl);
-
-    // 🔥 Use retry-safe call
-    const flaskResponse = await callFlaskWithRetries(flaskUrl, { text });
-
-    res.json(flaskResponse.data);
+    const data = await callFlaskWithRetry(text);
+    return res.json(data);
   } catch (err) {
-    console.error("❌ Final Flask error:", err.message);
-
-    res.status(500).json({
-      error: "Flask service unavailable or failed",
-      fallback: true,
-      detail: err.message,
+    return res.status(500).json({
+      error: "Flask failed to wake up",
+      details: err.message,
     });
   }
 });
