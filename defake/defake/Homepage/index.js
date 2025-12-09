@@ -175,11 +175,32 @@ app.post('/check-news', (req, res) => {
 });
 
 // ------------------ FLASK FACTCHECK ROUTE ------------------
+// --- AUTO WAKE-UP RETRY FUNCTION FOR FLASK ---
+async function callFlaskWithRetries(url, payload, retries = 6, delay = 1500) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      console.log(`🔁 Attempt ${attempt} → Calling Flask...`);
+      const response = await axios.post(url, payload);
+      console.log("✅ Flask responded successfully");
+      return response;
+    } catch (err) {
+      console.log(
+        `⚠️ Flask not ready (maybe sleeping). Retrying in ${delay}ms...`
+      );
+      await new Promise((r) => setTimeout(r, delay));
+    }
+  }
+
+  throw new Error("Flask unavailable after retries");
+}
+
+// --- FLASK URL (PROD OR LOCAL) ---
 const flaskUrl =
   process.env.NODE_ENV === "production"
     ? "https://defake-fake-news-detector-website.onrender.com/api/analyze"
     : "http://localhost:5000/api/analyze";
 
+// --- MAIN ROUTE ---
 app.post("/factcheck", async (req, res) => {
   const text = req.body.text || req.body.newsInput;
   console.log("📩 Incoming /factcheck request:", text);
@@ -189,20 +210,22 @@ app.post("/factcheck", async (req, res) => {
   }
 
   try {
-    console.log("🔁 Forwarding to Flask:", flaskUrl);
+    console.log("🔁 Forwarding request to Flask:", flaskUrl);
 
-    const flaskResponse = await axios.post(flaskUrl, { text });
+    // 🔥 Use retry-safe call
+    const flaskResponse = await callFlaskWithRetries(flaskUrl, { text });
+
     res.json(flaskResponse.data);
   } catch (err) {
-    console.error("❌ Flask connection error:", err.message);
+    console.error("❌ Final Flask error:", err.message);
 
     res.status(500).json({
       error: "Flask service unavailable or failed",
       fallback: true,
+      detail: err.message,
     });
   }
 });
-
 
 // ------------------ START SERVER ------------------
 const PORT = process.env.PORT || 3000;
