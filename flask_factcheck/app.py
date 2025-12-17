@@ -2,7 +2,6 @@ from flask import Flask, request, jsonify
 from textblob import TextBlob
 from dotenv import load_dotenv
 import os
-import requests
 import math
 from flask_cors import CORS
 
@@ -10,12 +9,23 @@ from flask_cors import CORS
 #  FLASK SETUP
 # ===================================
 app = Flask(__name__)
-CORS(app)   # <-- MUST BE AFTER app = Flask()
+CORS(app)
 
 load_dotenv()
+
 GOOGLE_API_KEY = os.getenv("GOOGLE_API_KEY")
 NEWS_API_KEY = os.getenv("NEWS_API_KEY")
 
+# ===================================
+#  HEALTH CHECK (CRITICAL FOR RENDER)
+# ===================================
+@app.route("/", methods=["GET"])
+def health():
+    return jsonify({"status": "Flask server running"}), 200
+
+# ===================================
+#  DEBUG API KEYS
+# ===================================
 def verify_api_keys():
     print("\n================= 🔐 API Key Check =================")
     print("✅ GOOGLE_API_KEY loaded." if GOOGLE_API_KEY else "⚠️ GOOGLE_API_KEY missing.")
@@ -36,13 +46,24 @@ def enhanced_news_analysis(text):
         "real_prob": 50
     }
 
+    if len(text.strip()) < 20:
+        result["details"].append("Text too short for reliable analysis")
+        return result
+
     text_lower = text.lower()
 
-    # --- Sentiment ---
-    sentiment = TextBlob(text).sentiment
-    polarity = sentiment.polarity
-    subjectivity = sentiment.subjectivity
-    result["details"].append(f"Sentiment polarity={polarity:.2f}, subjectivity={subjectivity:.2f}")
+    try:
+        sentiment = TextBlob(text).sentiment
+        polarity = sentiment.polarity
+        subjectivity = sentiment.subjectivity
+    except Exception as e:
+        polarity = 0
+        subjectivity = 0
+        result["details"].append("Sentiment analysis failed safely")
+
+    result["details"].append(
+        f"Sentiment polarity={polarity:.2f}, subjectivity={subjectivity:.2f}"
+    )
 
     tone_fake = 0
     tone_real = 0
@@ -54,12 +75,11 @@ def enhanced_news_analysis(text):
         tone_real = 0.7
         result["details"].append("Neutral and factual tone")
 
-    # --- Keywords ---
     sensational = ["shocking", "unbelievable", "miracle", "banned", "alien", "viral"]
     credible = ["report", "study", "research", "official", "analysis"]
 
-    sens_hits = sum(w in text_lower for w in sensational)
-    cred_hits = sum(w in text_lower for w in credible)
+    sens_hits = sum(word in text_lower for word in sensational)
+    cred_hits = sum(word in text_lower for word in credible)
 
     if sens_hits:
         tone_fake = max(tone_fake, 0.8)
@@ -69,12 +89,8 @@ def enhanced_news_analysis(text):
         tone_real = max(tone_real, 0.8)
         result["details"].append(f"Credible terms found ({cred_hits})")
 
-    # --- Scores ---
-    raw_fake = tone_fake
-    raw_real = tone_real
-
-    exp_fake = math.exp(raw_fake)
-    exp_real = math.exp(raw_real)
+    exp_fake = math.exp(tone_fake)
+    exp_real = math.exp(tone_real)
     total = exp_fake + exp_real
 
     fake_prob = exp_fake / total
@@ -90,17 +106,24 @@ def enhanced_news_analysis(text):
     return result
 
 # ===================================
-# API ROUTE
+#  API ROUTE
 # ===================================
 @app.route("/api/analyze", methods=["POST"])
 def analyze_news():
-    data = request.get_json()
-    text = data.get("text", "").strip()
+    try:
+        data = request.get_json(force=True)
+        text = data.get("text", "").strip()
+    except Exception as e:
+        return jsonify({"error": "Invalid request format"}), 400
 
     if not text:
         return jsonify({"error": "Please provide text"}), 400
 
-    analysis = enhanced_news_analysis(text)
+    try:
+        analysis = enhanced_news_analysis(text)
+    except Exception as e:
+        print("❌ Analysis crash:", e)
+        return jsonify({"error": "Analysis failed"}), 500
 
     return jsonify({
         "prediction": "Fake News" if analysis["is_fake"] else "Real News",
@@ -110,9 +133,9 @@ def analyze_news():
         "details": analysis["details"],
     })
 
+# ===================================
+#  RENDER ENTRY POINT
+# ===================================
 if __name__ == "__main__":
-    import os
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
-
-
